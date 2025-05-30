@@ -1,0 +1,205 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+1. Project Structure
+project-root/
+├── src/                          # Source code directory (소스 코드 디렉토리)
+│   ├── controllers/              # Request handlers (요청 처리 컨트롤러)
+│   ├── models/                   # Data models (데이터 모델)
+│   ├── routes/                   # API routes (API 라우트 정의)
+│   ├── middlewares/              # Middleware functions (미들웨어 함수)
+│   ├── services/                 # Business logic (비즈니스 로직)
+│   ├── utils/                    # Utility functions (유틸리티 함수)
+│   └── app.js                    # Express app setup (Express 앱 설정)
+├── config/                       # Configuration files (설정 파일)
+├── dockerfiles/                  # Docker related files (Docker 관련 파일)
+│   ├── nodejs/                   # Node.js docker setup (Node.js 도커 설정)
+│   └── mysql/                    # MySQL docker setup (MySQL 도커 설정)
+├── tests/                        # Test files (테스트 파일)
+├── .env                          # Environment variables (환경 변수)
+├── docker-compose.yml            # Docker Compose config (Docker Compose 설정)
+└── package.json                  # NPM package config (NPM 패키지 설정)
+
+2. Architecture Rules
+{
+  "layerPattern": "Controller -> Service -> Repository", // 계층 구조 패턴
+  "separationOfConcerns": true,                        // 관심사 분리: 비즈니스 로직과 데이터 접근 로직 분리
+  "dependencyInjection": true,                         // 의존성 주입: 외부 의존성은 주입 방식으로 처리
+  "singleResponsibility": true                         // 단일 책임 원칙: 각 모듈은 하나의 책임만 가짐
+}
+
+3. API Design Rules
+{
+  "restfulPrinciples": true,                // RESTful 원칙 준수
+  "versionedUrls": "/api/v1/resource",      // URL에 API 버전 포함
+  "responseFormat": {                       // 일관된 응답 형식
+    "status": "success|error|fail",         // 응답 상태
+    "data": "object|array|null",            // 응답 데이터
+    "message": "string",                    // 응답 메시지
+    "timestamp": "ISO-8601"                 // 응답 시간
+  },
+  "httpStatusCodes": {                      // HTTP 상태 코드 사용 규칙
+    "success": [200, 201, 204],             // 성공 응답
+    "clientError": [400, 401, 403, 404],    // 클라이언트 오류
+    "serverError": [500, 502, 503]          // 서버 오류
+  }
+}
+
+4. Database Rules
+{
+  "orm": "Sequelize",                    // ORM: Sequelize 사용
+  "tablePrefix": "bookion_",           // 모든 테이블명에 'bookion_' 접두사 사용
+  "tableNaming": "snake_case_plural",    // 테이블명: 복수형 snake_case (예: user_requests)
+  "columnNaming": "snake_case",          // 컬럼명: snake_case (예: created_at)
+  "indexing": "frequentlyQueried",       // 인덱싱: 자주 조회되는 컬럼에 인덱스 설정
+  "transactions": "requiredForMultiTable" // 트랜잭션: 여러 테이블 수정 시 필수
+}
+
+5. Authentication and Security Rules
+{
+  "apiKeyAuthentication": true,           // API 키 인증: 외부 클라이언트는 API 키로 인증
+  "keyStorage": "database",               // 키 저장소: 데이터베이스에 저장
+  "ipRestriction": "optional",            // IP 제한: 클라이언트별 허용 IP 지정 가능
+  "rateLimiting": "perApiKey",            // 요청 제한: API 키별 제한 설정
+  "keyRotation": "periodic"               // 키 순환: 정기적 API 키 갱신
+}
+
+6. Error Handling Rules
+{
+  "globalErrorHandler": true,          // 전역 에러 핸들러: Express에 구현
+  "customErrorClasses": true,          // 커스텀 에러 클래스: 애플리케이션 특화 에러 정의
+  "errorLogging": "all",               // 오류 로깅: 모든 오류 기록
+  "errorResponseFormat": {             // 오류 응답 형식
+    "status": "error",                 // 상태: error 또는 fail
+    "message": "user-friendly",        // 메시지: 사용자 친화적
+    "errorCode": "optional",           // 오류 코드: 선택적
+    "timestamp": "required"            // 시간: 필수
+  },
+  "asyncErrorHandling": "catchAsync"   // 비동기 오류 처리: catchAsync 유틸리티 사용
+}
+
+
+7. External Service Integration Rules
+{
+  "apiClientSeparation": true,        // API 클라이언트 분리: 외부 API 호출 로직 분리
+  "retryMechanism": {                 // 재시도 메커니즘
+    "enabled": true,                  // 활성화: 외부 API 호출 실패 시 재시도
+    "maxRetries": 3,                  // 최대 재시도 횟수: 3회
+    "backoff": "exponential"          // 백오프 전략: 지수 백오프
+  },
+  "timeout": {                        // 타임아웃
+    "default": 5000,                  // 기본값: 5초
+    "longRunning": 30000              // 장시간 실행: 30초
+  },
+  "caching": "frequently-accessed"    // 캐싱: 자주 접근하는 데이터 캐싱
+}
+
+8. Logging Rules
+{
+  "format": "structured-json",       // 형식: 구조화된 JSON
+  "levels": {                        // 로그 레벨
+    "error": "critical issues",      // 오류: 심각한 문제
+    "warn": "potential issues",      // 경고: 잠재적 문제
+    "info": "important events",      // 정보: 중요 이벤트
+    "debug": "development only"      // 디버그: 개발 환경 전용
+  },
+  "context": [                       // 컨텍스트 정보
+    "requestId",                     // 요청 ID
+    "userId",                        // 사용자 ID
+    "clientId",                      // 클라이언트 ID
+    "timestamp"                      // 시간
+  ],
+  "sensitiveDataMasking": true       // 민감 정보 마스킹: 비밀번호, 토큰 등 제외
+}
+
+9. Deployment and Operations Rules
+{
+  "containerization": "Docker",         // 컨테이너화: Docker 사용
+  "environmentSeparation": {            // 환경 분리
+    "development": ".env.development",  // 개발 환경
+    "testing": ".env.testing",          // 테스트 환경
+    "production": ".env.production"     // 운영 환경
+  },
+  "zeroDowntimeDeployment": true,       // 무중단 배포: 서비스 중단 없는 배포
+  "monitoring": [                       // 모니터링 대상
+    "service-health",                   // 서비스 상태
+    "performance-metrics",              // 성능 지표
+    "error-rates"                       // 오류율
+  ],
+  "backup": "daily-database"            // 백업: 일일 데이터베이스 백업
+}
+
+10. Performance Optimization Rules
+{
+  "caching": {                         // 캐싱 전략
+    "strategy": "Redis",               // 캐싱 도구: Redis
+    "ttl": {                           // Time-to-live 설정
+      "short": 300,                    // 단기: 5분
+      "medium": 3600,                  // 중기: 1시간
+      "long": 86400                    // 장기: 1일
+    }
+  },
+  "asyncProcessing": "long-running",   // 비동기 처리: 장시간 실행 작업
+  "databaseOptimization": [            // 데이터베이스 최적화
+    "query-optimization",              // 쿼리 최적화
+    "proper-indexing",                 // 적절한 인덱싱
+    "connection-pooling"               // 연결 풀링
+  ],
+  "loadBalancing": "multiple-instances" // 로드 밸런싱: 다중 인스턴스
+}
+
+
+11. API Key Usage Rules
+{
+  "storage": "secure-database",          // 저장소: 안전한 데이터베이스
+  "transmission": "x-api-key-header",    // 전송 방식: x-api-key HTTP 헤더
+  "permissionPrinciple": "least-privilege", // 권한 원칙: 최소 권한
+  "monitoring": {                        // 모니터링
+    "usage": true,                       // 사용량 모니터링
+    "anomalyDetection": true             // 비정상 활동 감지
+  },
+  "rotation": {                          // 키 교체
+    "schedule": "quarterly",             // 일정: 분기별
+    "onCompromise": "immediate"          // 유출 시: 즉시
+  }
+}
+
+
+12. Swagger Documentation Setup
+// config/swagger.js
+const swaggerOptions = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'Travel Information Service API',
+      version: '1.0.0',
+      description: 'API for processing travel information requests and providing recommendations'
+      // API 문서 제목, 버전, 설명 정보
+    },
+    servers: [
+      {
+        url: 'http://localhost:3000/api/v1',
+        description: 'Development server'
+        // 개발 서버 정보
+      }
+    ],
+    components: {
+      securitySchemes: {
+        apiKey: {
+          type: 'apiKey',
+          in: 'header',
+          name: 'x-api-key',
+          description: 'API key for authentication'
+          // API 키 인증 방식 설명
+        }
+      }
+    },
+    security: [{ apiKey: [] }]
+    // 기본 보안 요구사항 설정
+  },
+  apis: ['./src/routes/*.js', './src/models/*.js']
+  // Swagger 문서를 생성할 소스 파일 경로
+};
+
