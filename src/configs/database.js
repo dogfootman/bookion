@@ -1,19 +1,27 @@
 const { Sequelize } = require('sequelize');
-require('dotenv').config();
+const config = require('./config');
 
 const sequelize = new Sequelize(
-  process.env.DB_NAME || 'travel_service',
-  process.env.DB_USER || 'travel_user',
-  process.env.DB_PASSWORD || 'travel_password',
+  config.database,
+  config.username,
+  config.password,
   {
-    host: process.env.DB_HOST || 'localhost',
+    host: config.host,
+    port: config.port,
     dialect: 'mysql',
-    port: process.env.DB_PORT || 3306,
-    logging: process.env.NODE_ENV === 'development' ? console.log : false,
-    timezone: '+09:00', // 한국 시간대
+    logging: false,
+    timezone: '+09:00',
     define: {
-      underscored: true,
-      timestamps: true
+      charset: 'utf8mb4',
+      collate: 'utf8mb4_unicode_ci',
+      timestamps: true,
+      underscored: true
+    },
+    pool: {
+      max: 5,
+      min: 0,
+      acquire: 30000,
+      idle: 10000
     }
   }
 );
@@ -24,8 +32,16 @@ const connectDB = async () => {
     console.log('Database connection has been established successfully.');
   } catch (error) {
     console.error('Unable to connect to the database:', error);
-    process.exit(1);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Retrying connection in 5 seconds...');
+      setTimeout(connectDB, 5000);
+    } else {
+      process.exit(1);
+    }
   }
 };
 
-module.exports = { sequelize, connectDB };
+module.exports = {
+  sequelize,
+  connectDB
+};

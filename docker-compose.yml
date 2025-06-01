@@ -14,11 +14,19 @@ services:
       - PORT=${PORT}
       - TOUR_API_KEY=${TOUR_API_KEY}
       - API_SECRET_KEY=${API_SECRET_KEY}
+      - MYSQL_DB_HOST=mysql
+      - MYSQL_DB_PORT=3306
+      - MYSQL_DB_NAME=${MYSQL_DATABASE}
+      - MYSQL_DB_USER=${MYSQL_USER}
+      - MYSQL_DB_PASSWORD=${MYSQL_PASSWORD}
     ports:
       - "${PORT}:${PORT}"
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
+    depends_on:
+      mysql:
+        condition: service_healthy
     networks:
       - bookion-network
 
@@ -42,7 +50,7 @@ services:
       - ./dockerfiles/mysql/init.sql:/docker-entrypoint-initdb.d/01-init.sql
       - ./dockerfiles/mysql/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -58,8 +66,8 @@ services:
     environment:
       - PMA_HOST=mysql
       - PMA_PORT=${MYSQL_PORT}
-      #- PMA_USER=${MYSQL_USER}
-      #- PMA_PASSWORD=${MYSQL_PASSWORD}
+      - PMA_USER=${MYSQL_USER}
+      - PMA_PASSWORD=${MYSQL_PASSWORD}
       - PMA_ARBITRARY=1
     ports:
       - "${PHPMYADMIN_PORT}:80"
