@@ -146,7 +146,6 @@ const checkRoomAvailability = async (roomId, checkInDate, checkOutDate, transact
 const sendBookingConfirmationEmail = async (booking, room) => {
   try {
     // 시스템 설정에서 이메일 템플릿 가져오기
-    const SystemSettings = require('../models/systemSettings');
     const emailTemplate = await SystemSettings.findOne({
       where: { setting_key: 'booking_confirmation_email' }
     });
