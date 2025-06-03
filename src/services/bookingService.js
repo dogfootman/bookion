@@ -1,7 +1,8 @@
 const Booking = require('../models/booking');
 const Room = require('../models/room');
 const Accommodation = require('../models/accommodation');
-const User = require('../models/User');
+const User = require('../models/user');
+const SystemSettings = require('../models/systemSettings');
 //const emailService = require('./emailService');
 const { AppError } = require('../utils/errorHandler');
 
@@ -145,7 +146,7 @@ const checkRoomAvailability = async (roomId, checkInDate, checkOutDate, transact
 const sendBookingConfirmationEmail = async (booking, room) => {
   try {
     // 시스템 설정에서 이메일 템플릿 가져오기
-    const SystemSettings = require('../models/SystemSettings');
+    const SystemSettings = require('../models/systemSettings');
     const emailTemplate = await SystemSettings.findOne({
       where: { setting_key: 'booking_confirmation_email' }
     });

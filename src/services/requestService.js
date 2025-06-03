@@ -1,6 +1,7 @@
 const Request = require('../models/request');
-const TourInfo = require('../models/TourInfo');
-const User = require('../models/User');
+const TourInfo = require('../models/tourInfo');
+const User = require('../models/user');
+const Delivery = require('../models/delivery');
 //const aiService = require('./aiService');
 // const tourApiService = require('./tourApiService');
 //const emailService = require('./emailService');
@@ -195,8 +196,6 @@ const formatSmsContent = (tourInfoList) => {
  * @param {string} content - 발송 내용
  */
 const saveDeliveryHistory = async (requestId, type, recipient, content) => {
-  const Delivery = require('../models/Delivery');
-  
   await Delivery.create({
     request_id: requestId,
     delivery_type: type,

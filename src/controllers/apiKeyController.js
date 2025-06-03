@@ -1,4 +1,4 @@
-const ApiKey = require('../models/ApiKey');
+const ApiKey = require('../models/apiKey');
 const { catchAsync } = require('../utils/errorHandler');
 const crypto = require('crypto');
 

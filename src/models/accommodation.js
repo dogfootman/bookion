@@ -1,6 +1,6 @@
 const { DataTypes } = require('sequelize');
 const { sequelize } = global;
-const Location = require('./Location');
+const Location = require('./location');
 
 const Accommodation = sequelize.define('Accommodation', {
   id: {
