@@ -30,6 +30,8 @@ const buildWhereClause = (filters) => {
       }
     }
   });
+  
+  console.log('Final where clause:', where);
   return where;
 };
 
@@ -68,19 +70,23 @@ const getAreaCodes = async (request = {}) => {
   
   const order = sortBy ? [[sortBy, sortOrder || 'ASC']] : undefined;
   
+  // Convert page and pageSize to numbers
+  const pageNum = parseInt(page, 10);
+  const pageSizeNum = parseInt(pageSize, 10);
+  
   const { rows, count } = await AreaCode.findAndCountAll({
     where,
     order,
-    limit: pageSize,
-    offset: (page - 1) * pageSize
+    limit: pageSizeNum,
+    offset: (pageNum - 1) * pageSizeNum
   });
   
   return {
     items: rows,
     total: count,
-    page,
-    pageSize,
-    totalPages: Math.ceil(count / pageSize)
+    page: pageNum,
+    pageSize: pageSizeNum,
+    totalPages: Math.ceil(count / pageSizeNum)
   };
 };
 
@@ -128,19 +134,23 @@ const getCategoryCodes = async (request = {}) => {
   
   const order = sortBy ? [[sortBy, sortOrder || 'ASC']] : undefined;
   
+  // Convert page and pageSize to numbers
+  const pageNum = parseInt(page, 10);
+  const pageSizeNum = parseInt(pageSize, 10);
+  
   const { rows, count } = await CategoryCode.findAndCountAll({
     where,
     order,
-    limit: pageSize,
-    offset: (page - 1) * pageSize
+    limit: pageSizeNum,
+    offset: (pageNum - 1) * pageSizeNum
   });
   
   return {
     items: rows,
     total: count,
-    page,
-    pageSize,
-    totalPages: Math.ceil(count / pageSize)
+    page: pageNum,
+    pageSize: pageSizeNum,
+    totalPages: Math.ceil(count / pageSizeNum)
   };
 };
 
@@ -184,23 +194,30 @@ const getTouristSpots = async (request = {}) => {
   console.log('Converted filters:', convertedFilters);
   
   const where = buildWhereClause(convertedFilters);
-  console.log('Final where clause:', where);
   
   const order = sortBy ? [[sortBy, sortOrder || 'ASC']] : undefined;
+  
+  // Convert page and pageSize to numbers and ensure they are valid
+  const pageNum = Math.max(1, parseInt(page, 10) || 1);
+  const pageSizeNum = Math.max(1, parseInt(pageSize, 10) || 10);
+  
+  console.log('Pagination params:', { page: pageNum, pageSize: pageSizeNum });
   
   const { rows, count } = await TouristSpot.findAndCountAll({
     where,
     order,
-    limit: pageSize,
-    offset: (page - 1) * pageSize
+    limit: pageSizeNum,
+    offset: (pageNum - 1) * pageSizeNum
   });
+  
+  console.log('Query result:', { count, rowsCount: rows.length });
   
   return {
     items: rows,
     total: count,
-    page,
-    pageSize,
-    totalPages: Math.ceil(count / pageSize)
+    page: pageNum,
+    pageSize: pageSizeNum,
+    totalPages: Math.ceil(count / pageSizeNum)
   };
 };
 
@@ -248,19 +265,23 @@ const getLclsSystmCodes = async (request = {}) => {
   
   const order = sortBy ? [[sortBy, sortOrder || 'ASC']] : undefined;
   
+  // Convert page and pageSize to numbers
+  const pageNum = parseInt(page, 10);
+  const pageSizeNum = parseInt(pageSize, 10);
+  
   const { rows, count } = await LclsSystmCode.findAndCountAll({
     where,
     order,
-    limit: pageSize,
-    offset: (page - 1) * pageSize
+    limit: pageSizeNum,
+    offset: (pageNum - 1) * pageSizeNum
   });
   
   return {
     items: rows,
     total: count,
-    page,
-    pageSize,
-    totalPages: Math.ceil(count / pageSize)
+    page: pageNum,
+    pageSize: pageSizeNum,
+    totalPages: Math.ceil(count / pageSizeNum)
   };
 };
 
@@ -308,19 +329,23 @@ const getAreaBasedList = async (request = {}) => {
   
   const order = sortBy ? [[sortBy, sortOrder || 'ASC']] : undefined;
   
+  // Convert page and pageSize to numbers
+  const pageNum = parseInt(page, 10);
+  const pageSizeNum = parseInt(pageSize, 10);
+  
   const { rows, count } = await TouristSpot.findAndCountAll({
     where,
     order,
-    limit: pageSize,
-    offset: (page - 1) * pageSize
+    limit: pageSizeNum,
+    offset: (pageNum - 1) * pageSizeNum
   });
   
   return {
     items: rows,
     total: count,
-    page,
-    pageSize,
-    totalPages: Math.ceil(count / pageSize)
+    page: pageNum,
+    pageSize: pageSizeNum,
+    totalPages: Math.ceil(count / pageSizeNum)
   };
 };
 

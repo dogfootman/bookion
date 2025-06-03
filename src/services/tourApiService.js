@@ -737,15 +737,12 @@ const fetchLclsSystmCodes = async (level, parentCode = null) => {
         throw new AppError('Level 2 requires parent code', 400);
       }
       baseParams.lclsSystm1 = parentCode;
-      baseParams.lclsSystm2 = level;
     } else if (level === 3) {
       // 레벨 3은 parentCode가 필수
       if (!parentCode) {
         throw new AppError('Level 3 requires parent code', 400);
       }
       baseParams.lclsSystm1 = parentCode;
-      baseParams.lclsSystm2 = level;
-      baseParams.lclsSystm3 = level;
     }
 
     console.log('API parameters:', baseParams);

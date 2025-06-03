@@ -5,9 +5,22 @@ const { AppError } = require('../utils/errorHandler');
 /**
  * 지역 코드 목록 조회
  * @route POST /api/v1/bookion/area-codes
+ * @query {number} [page=1] - 페이지 번호
+ * @query {number} [pageSize=10] - 페이지당 항목 수
+ * @query {string} [sortBy] - 정렬 기준 필드
+ * @query {string} [sortOrder=ASC] - 정렬 방향 (ASC/DESC)
  */
 const getAreaCodes = catchAsync(async (req, res) => {
-  const result = await bookionService.getAreaCodes(req.body);
+  const { page, pageSize, sortBy, sortOrder } = req.query;
+  const filters = req.body;
+  
+  const result = await bookionService.getAreaCodes({
+    page,
+    pageSize,
+    sortBy,
+    sortOrder,
+    ...filters
+  });
   res.json(result);
 });
 
@@ -23,9 +36,22 @@ const getAreaCodeDetail = catchAsync(async (req, res) => {
 /**
  * 카테고리 코드 목록 조회
  * @route POST /api/v1/bookion/category-codes
+ * @query {number} [page=1] - 페이지 번호
+ * @query {number} [pageSize=10] - 페이지당 항목 수
+ * @query {string} [sortBy] - 정렬 기준 필드
+ * @query {string} [sortOrder=ASC] - 정렬 방향 (ASC/DESC)
  */
 const getCategoryCodes = catchAsync(async (req, res) => {
-  const result = await bookionService.getCategoryCodes(req.body);
+  const { page, pageSize, sortBy, sortOrder } = req.query;
+  const filters = req.body;
+  
+  const result = await bookionService.getCategoryCodes({
+    page,
+    pageSize,
+    sortBy,
+    sortOrder,
+    ...filters
+  });
   res.json(result);
 });
 
@@ -41,9 +67,22 @@ const getCategoryCodeDetail = catchAsync(async (req, res) => {
 /**
  * 관광지 정보 목록 조회
  * @route POST /api/v1/bookion/tourist-spots
+ * @query {number} [page=1] - 페이지 번호
+ * @query {number} [pageSize=10] - 페이지당 항목 수
+ * @query {string} [sortBy] - 정렬 기준 필드
+ * @query {string} [sortOrder=ASC] - 정렬 방향 (ASC/DESC)
  */
 const getTouristSpots = catchAsync(async (req, res) => {
-  const result = await bookionService.getTouristSpots(req.body);
+  const { page, pageSize, sortBy, sortOrder } = req.query;
+  const filters = req.body;
+  
+  const result = await bookionService.getTouristSpots({
+    page,
+    pageSize,
+    sortBy,
+    sortOrder,
+    ...filters
+  });
   res.json(result);
 });
 
@@ -59,9 +98,22 @@ const getTouristSpotDetail = catchAsync(async (req, res) => {
 /**
  * 분류체계 코드 목록 조회
  * @route POST /api/v1/bookion/lcls-systm-codes
+ * @query {number} [page=1] - 페이지 번호
+ * @query {number} [pageSize=10] - 페이지당 항목 수
+ * @query {string} [sortBy] - 정렬 기준 필드
+ * @query {string} [sortOrder=ASC] - 정렬 방향 (ASC/DESC)
  */
 const getLclsSystmCodes = catchAsync(async (req, res) => {
-  const result = await bookionService.getLclsSystmCodes(req.body);
+  const { page, pageSize, sortBy, sortOrder } = req.query;
+  const filters = req.body;
+  
+  const result = await bookionService.getLclsSystmCodes({
+    page,
+    pageSize,
+    sortBy,
+    sortOrder,
+    ...filters
+  });
   res.json(result);
 });
 
@@ -77,9 +129,22 @@ const getLclsSystmCodeDetail = catchAsync(async (req, res) => {
 /**
  * 지역기반 관광정보 목록 조회
  * @route POST /api/v1/bookion/area-based-list
+ * @query {number} [page=1] - 페이지 번호
+ * @query {number} [pageSize=10] - 페이지당 항목 수
+ * @query {string} [sortBy] - 정렬 기준 필드
+ * @query {string} [sortOrder=ASC] - 정렬 방향 (ASC/DESC)
  */
 const getAreaBasedList = catchAsync(async (req, res) => {
-  const result = await bookionService.getAreaBasedList(req.body);
+  const { page, pageSize, sortBy, sortOrder } = req.query;
+  const filters = req.body;
+  
+  const result = await bookionService.getAreaBasedList({
+    page,
+    pageSize,
+    sortBy,
+    sortOrder,
+    ...filters
+  });
   res.json(result);
 });
 
