@@ -2,7 +2,7 @@
   "development": {
     "username": "root",
     "password": "your_root_password_here",
-    "database": "bookion_dev",
+    "database": "bookion_service",
     "host": "mysql",
     "dialect": "mysql",
     "timezone": "+09:00"
