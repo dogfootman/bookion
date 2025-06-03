@@ -1,10 +1,12 @@
-const { sequelize } = require('../configs/database');
 const Booking = require('../models/booking');
 const Room = require('../models/room');
 const Accommodation = require('../models/accommodation');
 const User = require('../models/User');
 //const emailService = require('./emailService');
 const { AppError } = require('../utils/errorHandler');
+
+// Use global sequelize instance
+const { sequelize } = global;
 
 /**
  * 새로운 예약을 생성합니다.

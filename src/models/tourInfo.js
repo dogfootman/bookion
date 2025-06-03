@@ -1,5 +1,5 @@
 const { DataTypes } = require('sequelize');
-const { sequelize } = require('../configs/database');
+const { sequelize } = global;
 
 /**
  * 관광 정보 모델

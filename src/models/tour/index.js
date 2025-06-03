@@ -1,17 +1,20 @@
-const { sequelize } = require('../../configs/database');
+// Use global sequelize instance
+const { sequelize } = global;
 const LclsSystmCode = require('./lclsSystmCode');
 const AreaCode = require('./areaCode');
 const CategoryCode = require('./categoryCode');
 const TouristSpot = require('./touristSpot');
+const SyncLog = require('../syncLog');
 
 const initModels = async () => {
   try {
     // 모든 모델의 초기화가 완료될 때까지 대기
-    const [lclsSystmCode, areaCode, categoryCode, touristSpot] = await Promise.all([
+    const [lclsSystmCode, areaCode, categoryCode, touristSpot, syncLog] = await Promise.all([
       LclsSystmCode,
       AreaCode,
       CategoryCode,
-      TouristSpot
+      TouristSpot,
+      SyncLog
     ]);
 
     // 모델 초기화 확인
@@ -35,6 +38,11 @@ const initModels = async () => {
         exists: !!touristSpot,
         hasInit: !!touristSpot?.init,
         hasUpsert: !!touristSpot?.upsert
+      },
+      SyncLog: {
+        exists: !!syncLog,
+        hasInit: !!syncLog?.init,
+        hasUpsert: !!syncLog?.upsert
       }
     };
 
@@ -64,7 +72,7 @@ const initModels = async () => {
       targetKey: 'code'
     });
     touristSpot.belongsTo(categoryCode, {
-      foreignKey: 'category_code',
+      foreignKey: 'cat1',
       targetKey: 'code'
     });
 
@@ -73,7 +81,8 @@ const initModels = async () => {
       LclsSystmCode: lclsSystmCode,
       AreaCode: areaCode,
       CategoryCode: categoryCode,
-      TouristSpot: touristSpot
+      TouristSpot: touristSpot,
+      SyncLog: syncLog
     };
   } catch (error) {
     console.error('Failed to initialize models:', error);

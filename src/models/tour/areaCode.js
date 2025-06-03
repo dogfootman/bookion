@@ -1,5 +1,5 @@
 const { Model, DataTypes } = require('sequelize');
-const { sequelize } = require('../../configs/database');
+const { sequelize } = global;
 
 class AreaCode extends Model {}
 

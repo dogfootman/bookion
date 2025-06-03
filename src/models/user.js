@@ -1,5 +1,5 @@
 const { DataTypes } = require('sequelize');
-const { sequelize } = require('../configs/database');
+const { sequelize } = global;
 
 /**
  * 임시 사용자 모델

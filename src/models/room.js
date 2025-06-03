@@ -1,5 +1,5 @@
 const { DataTypes } = require('sequelize');
-const { sequelize } = require('../configs/database');
+const { sequelize } = global;
 const Accommodation = require('./accommodation');
 
 const Room = sequelize.define('Room', {

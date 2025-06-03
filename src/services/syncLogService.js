@@ -1,4 +1,8 @@
-const SyncLog = require('../models/syncLog');
+const getModels = require('../models/tour/index');
+const { AppError } = require('../utils/errorHandler');
+
+// Use global sequelize instance
+const { sequelize } = global;
 
 /**
  * 동기화 로그를 생성합니다.
@@ -8,6 +12,7 @@ const SyncLog = require('../models/syncLog');
  */
 const createSyncLog = async (apiName, status) => {
   try {
+    const { SyncLog } = await getModels();
     const syncLog = await SyncLog.create({
       api_name: apiName,
       total_count: 0,

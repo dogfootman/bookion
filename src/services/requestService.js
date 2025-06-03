@@ -6,7 +6,7 @@ const User = require('../models/User');
 //const emailService = require('./emailService');
 // const smsService = require('./smsService');
 const { AppError } = require('../utils/errorHandler');
-const { sequelize } = require('../configs/database');
+const { sequelize } = global;
 
 /**
  * 사용자의 여행 정보 요청을 생성하고 처리합니다.

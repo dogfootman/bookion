@@ -13,7 +13,8 @@ const TOUR_API_CONFIG = {
     areaCode: '/areaCode2',
     categoryCode: '/categoryCode2',
     lclsSystmCode: '/lclsSystmCode2',
-    areaBasedList: '/areaBasedList1'
+    areaBasedList: '/areaBasedList1',
+    areaBasedList2: '/areaBasedList2'
   },
   
   // API 요청 기본 파라미터
@@ -38,6 +39,4 @@ const TOUR_API_CONFIG = {
   }
 };
 
-module.exports = {
-  TOUR_API_CONFIG
-}; 
+module.exports = TOUR_API_CONFIG; 

@@ -3,7 +3,7 @@ const path = require('path');
 
 module.exports = {
   'config': path.resolve(__dirname, 'config/config.json'),
-  'models-path': path.resolve(__dirname, 'src/models'),
+  'models-path': path.resolve(__dirname, 'models/sequelize-cli-loader.js'),
   'seeders-path': path.resolve(__dirname, 'src/database/seeders'),
-  'migrations-path': path.resolve(__dirname, 'migrations')  // 경로 수정
+  'migrations-path': path.resolve(__dirname, 'migrations')
 };

@@ -1,15 +1,15 @@
 const axios = require('axios');
 const { TOUR_API } = require('../configs/constants');
-const { AreaCode, CategoryCode, TouristSpot } = require('../models/tour');
+const TOUR_API_CONFIG = require('../configs/tourApi');
+const { SyncLog, TouristSpot, AreaCode, SigunguCode, CategoryCode, LclsSystmCode } = require('../models');
 const getModels = require('../models/tour/index');
-const SyncLog = require('../models/syncLog');
 const { AppError } = require('../utils/errorHandler');
 const { createSyncLog, updateSyncLog } = require('./syncLogService');
-const { TOUR_API_CONFIG } = require('../configs/tourApi');
+const logger = require('../utils/logger');
+const { sequelize } = global;
 
 // 설정 로드 확인
-console.log('TourApiService - Configuration Check:');
-console.log('TOUR_API_CONFIG:', {
+console.log('TourApiService - Configuration Check:', {
   baseUrl: TOUR_API_CONFIG.baseUrl,
   endpoints: TOUR_API_CONFIG.endpoints,
   defaultParams: TOUR_API_CONFIG.defaultParams,
@@ -34,7 +34,6 @@ const tourApiClient = {
 
 // 디버그 로깅 추가
 console.log('TourApiService - Model initialization check:');
-const { LclsSystmCode } = getModels();
 console.log('- LclsSystmCode:', {
   exists: !!LclsSystmCode,
   hasInit: !!LclsSystmCode?.init,
@@ -616,15 +615,26 @@ const fetchTouristSpotsByArea = async (areaCode) => {
           title: touristSpot.title,
           addr1: touristSpot.addr1,
           addr2: touristSpot.addr2,
-          zipcode: touristSpot.zipcode,
           tel: touristSpot.tel,
+          zipcode: touristSpot.zipcode,
           firstimage: touristSpot.firstimage,
           firstimage2: touristSpot.firstimage2,
           mapx: touristSpot.mapx,
           mapy: touristSpot.mapy,
-          mlevel: touristSpot.mlevel,
+          cat1: touristSpot.cat1,
+          cat2: touristSpot.cat2,
+          cat3: touristSpot.cat3,
           areacode: touristSpot.areacode,
-          sigungucode: touristSpot.sigungucode
+          sigungucode: touristSpot.sigungucode,
+          createdtime: touristSpot.createdtime,
+          modifiedtime: touristSpot.modifiedtime,
+          mlevel: touristSpot.mlevel,
+          cpyrhtDivCd: touristSpot.cpyrhtDivCd,
+          lDongRegnCd: touristSpot.lDongRegnCd,
+          lDongSignguCd: touristSpot.lDongSignguCd,
+          lclsSystm1: touristSpot.lclsSystm1,
+          lclsSystm2: touristSpot.lclsSystm2,
+          lclsSystm3: touristSpot.lclsSystm3
         }, {
           returning: true
         });
@@ -648,7 +658,7 @@ const fetchTouristSpotsByArea = async (areaCode) => {
     console.log('Tourist spots synchronization completed:', syncResults);
 
     // 최종 결과 조회
-    const finalCount = await TouristSpot.count({ where: { areacode: areaCode } });
+    const finalCount = await TouristSpot.count({ where: { area_code: areaCode } });
     console.log(`Final tourist spots count in database for area ${areaCode}: ${finalCount}`);
 
     // sync_log 업데이트
@@ -715,14 +725,25 @@ const fetchLclsSystmCodes = async (level, parentCode = null) => {
       lclsSystmListYn: 'Y'
     };
 
-    // 옵션에 따라 파라미터 추가 (null이 아닐 때만 추가)
-    if (level === 1 && parentCode !== null) baseParams.lclsSystm1 = parentCode;
-    if (level === 2) {
-      if (parentCode !== null) baseParams.lclsSystm1 = parentCode;
+    // 옵션에 따라 파라미터 추가
+    if (level === 1) {
+      // 레벨 1은 parentCode가 없어도 됨
+      if (parentCode) {
+        baseParams.lclsSystm1 = parentCode;
+      }
+    } else if (level === 2) {
+      // 레벨 2는 parentCode가 필수
+      if (!parentCode) {
+        throw new AppError('Level 2 requires parent code', 400);
+      }
+      baseParams.lclsSystm1 = parentCode;
       baseParams.lclsSystm2 = level;
-    }
-    if (level === 3) {
-      if (parentCode !== null) baseParams.lclsSystm1 = parentCode;
+    } else if (level === 3) {
+      // 레벨 3은 parentCode가 필수
+      if (!parentCode) {
+        throw new AppError('Level 3 requires parent code', 400);
+      }
+      baseParams.lclsSystm1 = parentCode;
       baseParams.lclsSystm2 = level;
       baseParams.lclsSystm3 = level;
     }
@@ -933,11 +954,298 @@ const syncAllLclsSystmCodes = async () => {
   }
 };
 
+const fetchAreaBasedList2Sync = async (params) => {
+  if (!params.areaCode) {
+    throw new AppError('areaCode는 필수 파라미터입니다.', 400);
+  }
+
+  const syncLog = await SyncLog.create({
+    api_name: 'areaBasedList2Sync',
+    total_count: 0,
+    status: 'success',
+    started_at: new Date()
+  });
+
+  try {
+    console.log('Starting area-based tour info synchronization...', params);
+    
+    // API URL과 쿼리 파라미터 구성
+    const baseUrl = 'https://apis.data.go.kr/B551011/KorService2/areaBasedList2';
+    const decodedServiceKey = decodeURIComponent(TOUR_API.KEY);
+    
+    // 첫 페이지 요청으로 전체 데이터 수 확인
+    const firstPageParams = new URLSearchParams({
+      numOfRows: '99',
+      pageNo: '1',
+      MobileOS: 'ETC',
+      MobileApp: 'bookion',
+      _type: 'json',
+      serviceKey: decodedServiceKey,
+      areaCode: params.areaCode,
+      ...(params.sigunguCode && { sigunguCode: params.sigunguCode }),
+      ...(params.contentTypeId && { contentTypeId: params.contentTypeId }),
+      ...(params.cat1 && { cat1: params.cat1 }),
+      ...(params.cat2 && { cat2: params.cat2 }),
+      ...(params.cat3 && { cat3: params.cat3 }),
+      ...(params.arrange && { arrange: params.arrange })
+    });
+    
+    const firstPageUrl = `${baseUrl}?${firstPageParams.toString()}`;
+    console.log('First page API URL:', firstPageUrl);
+    
+    const firstPageResponse = await axios.get(firstPageUrl);
+    
+    if (!firstPageResponse.data || !firstPageResponse.data.response) {
+      console.error('Invalid API response structure:', firstPageResponse.data);
+      throw new AppError('Tour API 응답 구조가 올바르지 않습니다.', 500);
+    }
+
+    const { resultCode, resultMsg } = firstPageResponse.data.response.header;
+    if (resultCode !== '0000') {
+      console.error('API Error:', { resultCode, resultMsg });
+      throw new AppError(`Tour API 오류: ${resultMsg}`, 500);
+    }
+
+    const totalCount = firstPageResponse.data.response.body.totalCount;
+    console.log('Total tour info to fetch:', totalCount);
+
+    // sync_log 업데이트
+    await syncLog.update({ total_count: totalCount });
+
+    // 모든 데이터를 저장할 배열
+    let allTourInfo = firstPageResponse.data.response.body.items.item;
+    allTourInfo = Array.isArray(allTourInfo) ? allTourInfo : [allTourInfo];
+
+    // 나머지 페이지 데이터 가져오기
+    const numOfRows = 99;
+    const totalPages = Math.ceil(totalCount / numOfRows);
+    
+    if (totalPages > 1) {
+      console.log(`Fetching remaining ${totalPages - 1} pages...`);
+      
+      const remainingPages = Array.from({ length: totalPages - 1 }, (_, i) => i + 2);
+      
+      for (const pageNo of remainingPages) {
+        console.log(`Fetching page ${pageNo}...`);
+        
+        const pageParams = new URLSearchParams({
+          numOfRows: numOfRows.toString(),
+          pageNo: pageNo.toString(),
+          MobileOS: 'ETC',
+          MobileApp: 'bookion',
+          _type: 'json',
+          serviceKey: decodedServiceKey,
+          areaCode: params.areaCode,
+          ...(params.sigunguCode && { sigunguCode: params.sigunguCode }),
+          ...(params.contentTypeId && { contentTypeId: params.contentTypeId }),
+          ...(params.cat1 && { cat1: params.cat1 }),
+          ...(params.cat2 && { cat2: params.cat2 }),
+          ...(params.cat3 && { cat3: params.cat3 }),
+          ...(params.arrange && { arrange: params.arrange })
+        });
+        
+        const pageUrl = `${baseUrl}?${pageParams.toString()}`;
+        const pageResponse = await axios.get(pageUrl);
+        
+        if (!pageResponse.data || !pageResponse.data.response) {
+          console.error(`Invalid API response structure for page ${pageNo}:`, pageResponse.data);
+          continue;
+        }
+
+        const pageItems = pageResponse.data.response.body.items.item;
+        const pageTourInfo = Array.isArray(pageItems) ? pageItems : [pageItems];
+        allTourInfo = allTourInfo.concat(pageTourInfo);
+        
+        console.log(`Page ${pageNo} fetched: ${pageTourInfo.length} items`);
+      }
+    }
+
+    console.log(`Total tour info fetched: ${allTourInfo.length}`);
+
+    // 데이터 동기화 (upsert)
+    console.log('Synchronizing tour info...');
+    const syncResults = {
+      created: 0,
+      updated: 0,
+      unchanged: 0,
+      errors: 0
+    };
+
+    for (const item of allTourInfo) {
+      try {
+        // 기존 데이터 조회
+        const existingSpot = await TouristSpot.findOne({
+          where: { contentId: item.contentid || item.contentId }
+        });
+
+        const spotData = {
+          contentId: item.contentid || item.contentId,
+          contentTypeId: item.contenttypeid,
+          title: item.title,
+          addr1: item.addr1,
+          addr2: item.addr2,
+          tel: item.tel,
+          zipcode: item.zipcode,
+          firstimage: item.firstimage,
+          firstimage2: item.firstimage2,
+          mapx: item.mapx,
+          mapy: item.mapy,
+          cat1: item.cat1,
+          cat2: item.cat2,
+          cat3: item.cat3,
+          areaCode: item.areacode || params.areaCode,
+          sigunguCode: item.sigungucode,
+          createdtime: item.createdtime,
+          modifiedtime: item.modifiedtime,
+          mlevel: item.mlevel,
+          cpyrhtDivCd: item.cpyrhtDivCd,
+          lDongRegnCd: item.lDongRegnCd,
+          lDongSignguCd: item.lDongSignguCd,
+          lclsSystm1: item.lclsSystm1,
+          lclsSystm2: item.lclsSystm2,
+          lclsSystm3: item.lclsSystm3
+        };
+
+        if (!existingSpot) {
+          // 새로운 데이터 생성
+          await TouristSpot.create(spotData);
+          syncResults.created++;
+        } else if (item.modifiedtime && existingSpot.modifiedtime !== item.modifiedtime) {
+          // modifiedtime이 변경된 경우에만 업데이트
+          const changedFields = {};
+          Object.keys(spotData).forEach(key => {
+            if (spotData[key] !== existingSpot[key]) {
+              changedFields[key] = spotData[key];
+            }
+          });
+
+          if (Object.keys(changedFields).length > 0) {
+            await existingSpot.update(changedFields);
+            syncResults.updated++;
+          } else {
+            syncResults.unchanged++;
+          }
+        } else {
+          syncResults.unchanged++;
+        }
+      } catch (error) {
+        console.error(`Error upserting tour info ${item.contentid}:`, error);
+        syncResults.errors++;
+      }
+    }
+
+    console.log('Tour info synchronization completed:', syncResults);
+
+    // 최종 결과 조회
+    const finalCount = await TouristSpot.count({ 
+      where: { 
+        areaCode: params.areaCode,
+        ...(params.sigunguCode && { sigunguCode: params.sigunguCode }),
+        ...(params.contentTypeId && { contentTypeId: params.contentTypeId })
+      } 
+    });
+    console.log(`Final tour info count in database: ${finalCount}`);
+
+    // sync_log 업데이트
+    await syncLog.update({
+      created_count: syncResults.created,
+      updated_count: syncResults.updated,
+      unchanged_count: syncResults.unchanged,
+      error_count: syncResults.errors,
+      completed_at: new Date()
+    });
+
+    return {
+      syncResults,
+      totalCount: finalCount,
+      syncLog
+    };
+  } catch (error) {
+    console.error('Error in fetchAreaBasedList2Sync:', {
+      message: error.message,
+      stack: error.stack,
+      response: error.response?.data,
+      config: {
+        url: error.config?.url,
+        headers: error.config?.headers
+      }
+    });
+
+    // sync_log 업데이트
+    await syncLog.update({
+      status: 'error',
+      error_message: error.message,
+      completed_at: new Date()
+    });
+
+    throw new AppError('지역기반 관광정보 동기화 중 오류가 발생했습니다.', 500);
+  }
+};
+
+const fetchAreaBasedList2Async = async (params = {}) => {
+  const syncLog = await SyncLog.create({
+    api_name: 'areaBasedList2Async',
+    total_count: 0,
+    status: 'pending',
+    started_at: new Date()
+  });
+
+  // 비동기 작업을 즉시 시작하고 응답 반환
+  (async () => {
+    try {
+      // 모든 지역 코드 조회
+      const areaCodes = await AreaCode.findAll({
+        attributes: ['code']
+      });
+
+      console.log(`Starting async area-based tour info synchronization for ${areaCodes.length} areas...`);
+
+      // 각 지역별로 동기화 작업 실행
+      for (const areaCode of areaCodes) {
+        try {
+          console.log(`Processing area code: ${areaCode.code}`);
+          await fetchAreaBasedList2Sync({
+            ...params,
+            areaCode: areaCode.code
+          });
+        } catch (error) {
+          console.error(`Error processing area code ${areaCode.code}:`, error);
+          // 개별 지역 코드 처리 실패는 전체 작업을 중단하지 않음
+        }
+      }
+
+      // sync_log 업데이트
+      await syncLog.update({
+        status: 'success',
+        completed_at: new Date()
+      });
+
+    } catch (error) {
+      console.error('Error in fetchAreaBasedList2Async:', error);
+
+      // sync_log 업데이트
+      await syncLog.update({
+        status: 'error',
+        error_message: error.message,
+        completed_at: new Date()
+      });
+    }
+  })();
+
+  // 즉시 syncLogId 반환
+  return {
+    message: '지역기반 관광정보 비동기 동기화가 시작되었습니다.',
+    syncLogId: syncLog.id
+  };
+};
+
 module.exports = {
   fetchAreaCodes,
   fetchCategoryCodes,
   fetchTouristSpotsByArea,
   syncAllCategoryCodes,
   fetchLclsSystmCodes,
-  syncAllLclsSystmCodes
+  syncAllLclsSystmCodes,
+  fetchAreaBasedList2Sync,
+  fetchAreaBasedList2Async
 }; 

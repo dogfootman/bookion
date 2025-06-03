@@ -1,5 +1,5 @@
 const { Model, DataTypes } = require('sequelize');
-const { sequelize } = require('../../configs/database');
+const { sequelize } = global;
 
 console.log('Initializing LclsSystmCode model...');
 

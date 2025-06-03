@@ -1,5 +1,5 @@
 const { DataTypes } = require('sequelize');
-const { sequelize } = require('../configs/database');
+const { sequelize } = global;
 
 const SyncLog = sequelize.define('SyncLog', {
   id: {

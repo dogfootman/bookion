@@ -1,5 +1,5 @@
 const { DataTypes } = require('sequelize');
-const { sequelize } = require('../configs/database');
+const { sequelize } = global;
 const Location = require('./Location');
 
 const Accommodation = sequelize.define('Accommodation', {
